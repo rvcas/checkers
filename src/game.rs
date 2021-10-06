@@ -40,6 +40,7 @@ impl<'a> Game<'a> {
 
     pub fn validate(&mut self) -> Validation<'a> {
         if self.debug {
+            println!("Initial Board:");
             println!("{}", self.board);
         }
 
@@ -47,8 +48,11 @@ impl<'a> Game<'a> {
 
         while let Some(mov) = moves_iter.next() {
             if self.debug {
-                println!("{}", self.current_player);
-                println!("{:?}", mov);
+                println!("Player: {}", self.current_player);
+                println!(
+                    "Move: ({}, {}) to ({}, {})",
+                    mov.initial.x, mov.initial.y, mov.destination.x, mov.destination.y
+                );
             }
 
             if !self.board.make_move(&self.current_player, mov) {
@@ -79,6 +83,10 @@ impl<'a> Game<'a> {
                     }
                 }
             }
+        }
+
+        if self.board.is_incomplete() {
+            return Validation::IncompleteGame;
         }
 
         let red_score = self.board.red_score();

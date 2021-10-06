@@ -30,7 +30,7 @@ fn main() -> Result<()> {
     for path in &opt.input {
         let mut input = read_file(path)?;
 
-        let answer = validate_input(&mut input, path, opt.debug)?;
+        let answer = validate_input(&mut input, opt.debug)?;
 
         println!("{}", answer);
     }
@@ -43,7 +43,7 @@ fn read_file(path: &Path) -> Result<String> {
         .with_context(|| format!("failed to read moves from {}", path.display()))
 }
 
-fn validate_input(input: &mut String, path: &Path, debug: bool) -> Result<String> {
+fn validate_input(input: &mut String, debug: bool) -> Result<String> {
     clean_input(input);
 
     let moves = parse_moves(&input)?;
@@ -56,7 +56,7 @@ fn validate_input(input: &mut String, path: &Path, debug: bool) -> Result<String
 
     let validation = game.validate();
 
-    Ok(format!("{} - {}", path.display(), validation))
+    Ok(format!("{}", validation))
 }
 
 fn clean_input(input: &mut String) {
@@ -125,46 +125,41 @@ fn parse_moves(input: &str) -> Result<Vec<Move>> {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-
     use crate::validate_input;
 
     #[test]
     fn red() {
         let mut input = include_str!("../inputs/red.txt").to_string();
 
-        let answer = validate_input(&mut input, &PathBuf::from("red.txt"), false);
+        let answer = validate_input(&mut input, false);
 
-        assert_eq!(answer.unwrap().as_str(), "red.txt - red");
+        assert_eq!(answer.unwrap().as_str(), "red");
     }
 
     #[test]
     fn white() {
         let mut input = include_str!("../inputs/white.txt").to_string();
 
-        let answer = validate_input(&mut input, &PathBuf::from("white.txt"), false);
+        let answer = validate_input(&mut input, false);
 
-        assert_eq!(answer.unwrap().as_str(), "white.txt - white");
+        assert_eq!(answer.unwrap().as_str(), "white");
     }
 
     #[test]
     fn illegal_move() {
         let mut input = include_str!("../inputs/illegal_move.txt").to_string();
 
-        let answer = validate_input(&mut input, &PathBuf::from("illegal_move.txt"), false);
+        let answer = validate_input(&mut input, false);
 
-        assert_eq!(
-            answer.unwrap().as_str(),
-            "illegal_move.txt - line 15 illegal move: 1,0,0,5"
-        );
+        assert_eq!(answer.unwrap().as_str(), "line 15 illegal move: 1,0,0,5");
     }
 
     #[test]
     fn incomplete() {
         let mut input = include_str!("../inputs/incomplete.txt").to_string();
 
-        let answer = validate_input(&mut input, &PathBuf::from("incomplete.txt"), false);
+        let answer = validate_input(&mut input, false);
 
-        assert_eq!(answer.unwrap().as_str(), "incomplete.txt - incomplete game");
+        assert_eq!(answer.unwrap().as_str(), "incomplete game");
     }
 }
