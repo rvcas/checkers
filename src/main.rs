@@ -57,6 +57,91 @@ struct Move {
     src: String,
 }
 
+#[derive(Debug)]
+enum Player {
+    Red,
+    White,
+}
+
+#[derive(Debug)]
+struct Board {
+    coords: Vec<Vec<Option<Player>>>,
+}
+
+#[derive(Debug)]
+struct Game<'a> {
+    current_player: Player,
+    board: Board,
+    moves: &'a Vec<Move>,
+}
+
+enum Validation<'a> {
+    Winner(Player),
+    IncompleteGame,
+    Illegal(&'a Move),
+}
+
+impl fmt::Display for Validation<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Winner(player) => match player {
+                Player::Red => write!(f, "red"),
+                Player::White => write!(f, "white"),
+            },
+            Self::IncompleteGame => write!(f, "incomplete game"),
+            Self::Illegal(mov) => write!(f, "line {} illegal move: {}", mov.line, mov.src),
+        }
+    }
+}
+
+impl<'a> Game<'a> {
+    fn new(moves: &'a Vec<Move>) -> Self {
+        Self {
+            current_player: Player::White,
+            board: Board::new(),
+            moves,
+        }
+    }
+
+    fn validate(&self) -> Validation<'a> {
+        todo!()
+    }
+
+    fn next_player(&mut self) {
+        if let Player::White = self.current_player {
+            self.current_player = Player::Red
+        } else {
+            self.current_player = Player::White
+        }
+    }
+}
+
+impl Board {
+    fn new() -> Self {
+        Self {
+            coords: (0..8).fold(vec![], |mut cols, x| {
+                let col = (0..8).fold(vec![], |mut col, y| {
+                    let coord = if INITIAL_WHITE_POSITIONS.contains(&(x, y)) {
+                        Some(Player::White)
+                    } else if INITIAL_RED_POSITIONS.contains(&(x, y)) {
+                        Some(Player::Red)
+                    } else {
+                        None
+                    };
+
+                    col.push(coord);
+
+                    col
+                });
+
+                cols.push(col);
+
+                cols
+            }),
+        }
+    }
+}
+
 fn main() -> Result<()> {
     let opt = Opt::from_args();
 
@@ -79,9 +164,11 @@ fn validate_input(input: &mut String, path: &Path) -> Result<String> {
 
     let moves = parse_moves(&input)?;
 
-    println!("{:?}", moves);
+    let game = Game::new(&moves);
 
-    Ok(format!("{} - ", path.display()))
+    let validation = game.validate();
+
+    Ok(format!("{} - {}", path.display(), validation))
 }
 
 fn clean_input(input: &mut String) {
@@ -99,13 +186,13 @@ fn parse_moves(input: &str) -> Result<Vec<Move>> {
         .split("\n")
         .enumerate()
         .fold(Ok(vec![]), |acc, (index, input_line)| {
+            let mut input_line = input_line.to_string();
+
+            clean_input(&mut input_line);
+
             let move_line = input_line
                 .split(",")
                 .map(|n| {
-                    let mut n = n.to_string();
-
-                    clean_input(&mut n);
-
                     Ok(n.parse::<i32>().with_context(|| {
                         format!(
                             "line {}: failed to parse move {} because {} is not a number",
@@ -134,7 +221,7 @@ fn parse_moves(input: &str) -> Result<Vec<Move>> {
                     initial,
                     destination,
                     line: index + 1,
-                    src: input_line.to_string(),
+                    src: input_line,
                 });
 
                 Ok(acc)
