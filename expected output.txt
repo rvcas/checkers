@@ -1,0 +1,4 @@
+white.txt - white
+red.txt - red
+incomplete.txt - incomplete game
+illegal move.txt - line 15 illegal move: 1,0,0,5 
