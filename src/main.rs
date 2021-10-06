@@ -1,155 +1,39 @@
 use std::{
-    fmt, fs,
+    fs,
     path::{Path, PathBuf},
 };
 
 use anyhow::{anyhow, Context, Result};
 use structopt::StructOpt;
 
-const INITIAL_WHITE_POSITIONS: [(i32, i32); 12] = [
-    (1, 0),
-    (3, 0),
-    (5, 0),
-    (7, 0),
-    (0, 1),
-    (2, 1),
-    (4, 1),
-    (6, 1),
-    (1, 2),
-    (3, 2),
-    (5, 2),
-    (7, 2),
-];
+use checkers::{
+    game::Game,
+    r#move::{Move, Position},
+};
 
-const INITIAL_RED_POSITIONS: [(i32, i32); 12] = [
-    (0, 5),
-    (2, 5),
-    (4, 5),
-    (6, 5),
-    (1, 6),
-    (3, 6),
-    (5, 6),
-    (7, 6),
-    (0, 7),
-    (2, 7),
-    (4, 7),
-    (6, 7),
-];
-
+/// Valid checker's moves
 #[derive(StructOpt, Debug)]
-#[structopt(name = "checkers", about = "Valid checker's moves")]
+#[structopt(name = "checkers")]
 struct Opt {
+    /// Input files containing moves to validate
     #[structopt(name = "FILE", parse(from_os_str))]
-    input: PathBuf,
-}
+    input: Vec<PathBuf>,
 
-#[derive(Debug)]
-struct Position {
-    x: i32,
-    y: i32,
-}
-
-#[derive(Debug)]
-struct Move {
-    initial: Position,
-    destination: Position,
-    line: usize,
-    src: String,
-}
-
-#[derive(Debug)]
-enum Player {
-    Red,
-    White,
-}
-
-#[derive(Debug)]
-struct Board {
-    coords: Vec<Vec<Option<Player>>>,
-}
-
-#[derive(Debug)]
-struct Game<'a> {
-    current_player: Player,
-    board: Board,
-    moves: &'a Vec<Move>,
-}
-
-enum Validation<'a> {
-    Winner(Player),
-    IncompleteGame,
-    Illegal(&'a Move),
-}
-
-impl fmt::Display for Validation<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Winner(player) => match player {
-                Player::Red => write!(f, "red"),
-                Player::White => write!(f, "white"),
-            },
-            Self::IncompleteGame => write!(f, "incomplete game"),
-            Self::Illegal(mov) => write!(f, "line {} illegal move: {}", mov.line, mov.src),
-        }
-    }
-}
-
-impl<'a> Game<'a> {
-    fn new(moves: &'a Vec<Move>) -> Self {
-        Self {
-            current_player: Player::White,
-            board: Board::new(),
-            moves,
-        }
-    }
-
-    fn validate(&self) -> Validation<'a> {
-        todo!()
-    }
-
-    fn next_player(&mut self) {
-        if let Player::White = self.current_player {
-            self.current_player = Player::Red
-        } else {
-            self.current_player = Player::White
-        }
-    }
-}
-
-impl Board {
-    fn new() -> Self {
-        Self {
-            coords: (0..8).fold(vec![], |mut cols, x| {
-                let col = (0..8).fold(vec![], |mut col, y| {
-                    let coord = if INITIAL_WHITE_POSITIONS.contains(&(x, y)) {
-                        Some(Player::White)
-                    } else if INITIAL_RED_POSITIONS.contains(&(x, y)) {
-                        Some(Player::Red)
-                    } else {
-                        None
-                    };
-
-                    col.push(coord);
-
-                    col
-                });
-
-                cols.push(col);
-
-                cols
-            }),
-        }
-    }
+    /// Print the Current Move and Board
+    #[structopt(short, long)]
+    debug: bool,
 }
 
 fn main() -> Result<()> {
     let opt = Opt::from_args();
 
-    let mut input = read_file(&opt.input)?;
+    for path in &opt.input {
+        let mut input = read_file(path)?;
 
-    let answer = validate_input(&mut input, &opt.input)?;
+        let answer = validate_input(&mut input, path, opt.debug)?;
 
-    println!("{}", answer);
+        println!("{}", answer);
+    }
 
     Ok(())
 }
@@ -159,12 +43,16 @@ fn read_file(path: &Path) -> Result<String> {
         .with_context(|| format!("failed to read moves from {}", path.display()))
 }
 
-fn validate_input(input: &mut String, path: &Path) -> Result<String> {
+fn validate_input(input: &mut String, path: &Path, debug: bool) -> Result<String> {
     clean_input(input);
 
     let moves = parse_moves(&input)?;
 
-    let game = Game::new(&moves);
+    let mut game = Game::new(&moves);
+
+    if debug {
+        game.toggle_debug();
+    }
 
     let validation = game.validate();
 
@@ -245,7 +133,7 @@ mod tests {
     fn red() {
         let mut input = include_str!("../inputs/red.txt").to_string();
 
-        let answer = validate_input(&mut input, &PathBuf::from("red.txt"));
+        let answer = validate_input(&mut input, &PathBuf::from("red.txt"), false);
 
         assert_eq!(answer.unwrap().as_str(), "red.txt - red");
     }
@@ -254,7 +142,7 @@ mod tests {
     fn white() {
         let mut input = include_str!("../inputs/white.txt").to_string();
 
-        let answer = validate_input(&mut input, &PathBuf::from("white.txt"));
+        let answer = validate_input(&mut input, &PathBuf::from("white.txt"), false);
 
         assert_eq!(answer.unwrap().as_str(), "white.txt - white");
     }
@@ -263,7 +151,7 @@ mod tests {
     fn illegal_move() {
         let mut input = include_str!("../inputs/illegal_move.txt").to_string();
 
-        let answer = validate_input(&mut input, &PathBuf::from("illegal_move.txt"));
+        let answer = validate_input(&mut input, &PathBuf::from("illegal_move.txt"), false);
 
         assert_eq!(
             answer.unwrap().as_str(),
@@ -275,7 +163,7 @@ mod tests {
     fn incomplete() {
         let mut input = include_str!("../inputs/incomplete.txt").to_string();
 
-        let answer = validate_input(&mut input, &PathBuf::from("incomplete.txt"));
+        let answer = validate_input(&mut input, &PathBuf::from("incomplete.txt"), false);
 
         assert_eq!(answer.unwrap().as_str(), "incomplete.txt - incomplete game");
     }
