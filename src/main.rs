@@ -1,10 +1,40 @@
 use std::{
-    fs,
+    fmt, fs,
     path::{Path, PathBuf},
 };
 
 use anyhow::{anyhow, Context, Result};
 use structopt::StructOpt;
+
+const INITIAL_WHITE_POSITIONS: [(i32, i32); 12] = [
+    (1, 0),
+    (3, 0),
+    (5, 0),
+    (7, 0),
+    (0, 1),
+    (2, 1),
+    (4, 1),
+    (6, 1),
+    (1, 2),
+    (3, 2),
+    (5, 2),
+    (7, 2),
+];
+
+const INITIAL_RED_POSITIONS: [(i32, i32); 12] = [
+    (0, 5),
+    (2, 5),
+    (4, 5),
+    (6, 5),
+    (1, 6),
+    (3, 6),
+    (5, 6),
+    (7, 6),
+    (0, 7),
+    (2, 7),
+    (4, 7),
+    (6, 7),
+];
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "checkers", about = "Valid checker's moves")]
