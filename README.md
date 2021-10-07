@@ -24,6 +24,7 @@ The CLI also supports:
 
 - passing many input files at once
   - `cargo run -- inputs/red.txt inputs/illegal_move.txt`
+  - `cargo run -- inputs/*`
 - printing the current player, move, and board
   - `cargo run -- inputs/white.txt --debug`
 
