@@ -17,9 +17,13 @@ pub struct Move {
 impl Move {
     pub fn is_valid(&self, player: &Player) -> bool {
         if self.initial.x > 7
+            || self.initial.x < 0
             || self.initial.y > 7
+            || self.initial.y < 0
             || self.destination.x > 7
+            || self.destination.x < 0
             || self.destination.y > 7
+            || self.destination.y < 0
         {
             return false;
         }
