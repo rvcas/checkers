@@ -4,7 +4,8 @@ Validates Checker's Moves
 
 ## How to use?
 
-This was built in Rust using the structopt and anyhow crates.
+This was built in [Rust](https://www.rust-lang.org) using the [structopt](https://github.com/TeXitoi/structopt)
+and [anyhow](https://github.com/dtolnay/anyhow) [crates](https://crates.io).
 
 ### Running
 
