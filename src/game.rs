@@ -76,15 +76,12 @@ impl<'a> Game<'a> {
                     None => {
                         return Validation::Illegal(mov);
                     }
-                    Some(player) => {
-                        if *player == self.current_player {
-                            if !next_mov.is_jump(player) {
-                                return Validation::Illegal(mov);
-                            }
-                        } else {
-                            self.next_player();
+                    Some(player) if *player == self.current_player => {
+                        if !mov.is_jump(player) || !next_mov.is_jump(player) {
+                            return Validation::Illegal(next_mov);
                         }
                     }
+                    _ => self.next_player(),
                 }
             }
         }
