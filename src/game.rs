@@ -74,7 +74,7 @@ impl<'a> Game<'a> {
 
                 match opt_player {
                     None => {
-                        return Validation::Illegal(mov);
+                        return Validation::Illegal(next_mov);
                     }
                     Some(player) if *player == self.current_player => {
                         if !mov.is_jump(player) || !next_mov.is_jump(player) {
