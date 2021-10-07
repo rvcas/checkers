@@ -11,7 +11,7 @@ use checkers::{
     r#move::{Move, Position},
 };
 
-/// Valid checker's moves
+/// Validate checker's moves
 #[derive(StructOpt, Debug)]
 #[structopt(name = "checkers")]
 struct Opt {

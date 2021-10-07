@@ -94,6 +94,10 @@ impl Board {
             return false;
         }
 
+        if !mov.is_jump(current_player) && self.is_jumping_possible(current_player, mov) {
+            return false;
+        }
+
         if let Some(pos) = mov.jumped_position(current_player) {
             let Position { x, y } = pos;
 
@@ -156,6 +160,145 @@ impl Board {
                     acc
                 }
             })
+    }
+
+    fn is_jumping_possible(&self, player: &Player, mov: &Move) -> bool {
+        let Position { x, y } = mov.initial;
+
+        match player {
+            Player::Red => {
+                // check right
+                let right = match self.coords.get((x + 1) as usize) {
+                    // Out of bounds but that's ok we just keep going
+                    None => false,
+                    Some(row) => match row.get((y - 1) as usize) {
+                        // Out of bounds but that's ok we just keep going
+                        None => false,
+                        Some(spot) => match spot {
+                            // Empty Spot, the original x, y could move here
+                            None => false,
+                            Some(other_player) => {
+                                // We might be able to jump in this case
+                                if other_player != player {
+                                    match self.coords.get((x + 2) as usize) {
+                                        // Out of bounds but that's ok we just keep going
+                                        None => false,
+                                        Some(row) => match row.get((y - 2) as usize) {
+                                            // Out of bounds but that's ok we just keep going
+                                            None => false,
+                                            Some(spot) => match spot {
+                                                None => true,
+                                                // Occupied
+                                                Some(_) => false,
+                                            },
+                                        },
+                                    }
+                                } else {
+                                    false
+                                }
+                            }
+                        },
+                    },
+                };
+
+                // check left
+                let left = match self.coords.get((x - 1) as usize) {
+                    // Out of bounds but that's ok we just keep going
+                    None => false,
+                    Some(row) => match row.get((y - 1) as usize) {
+                        // Out of bounds but that's ok we just keep going
+                        None => false,
+                        Some(spot) => match spot {
+                            // Empty Spot, the original x, y could move here
+                            None => false,
+                            Some(other_player) => {
+                                // We might be able to jump in this case
+                                if other_player != player {
+                                    match self.coords.get((x - 2) as usize) {
+                                        // Out of bounds but that's ok we just keep going
+                                        None => false,
+                                        Some(row) => match row.get((y - 2) as usize) {
+                                            // Out of bounds but that's ok we just keep going
+                                            None => false,
+                                            Some(spot) => match spot {
+                                                None => true,
+                                                // Occupied
+                                                Some(_) => false,
+                                            },
+                                        },
+                                    }
+                                } else {
+                                    false
+                                }
+                            }
+                        },
+                    },
+                };
+
+                left || right
+            }
+            Player::White => {
+                // check right
+                let right = match self.coords.get((x + 1) as usize) {
+                    None => false,
+                    Some(row) => match row.get((y + 1) as usize) {
+                        None => false,
+                        Some(spot) => match spot {
+                            None => false,
+                            Some(other_player) => {
+                                // We might be able to jump in this case
+                                if other_player != player {
+                                    match self.coords.get((x + 2) as usize) {
+                                        None => false,
+                                        Some(row) => match row.get((y + 2) as usize) {
+                                            None => false,
+                                            Some(spot) => match spot {
+                                                None => true,
+                                                // Occupied
+                                                Some(_) => false,
+                                            },
+                                        },
+                                    }
+                                } else {
+                                    false
+                                }
+                            }
+                        },
+                    },
+                };
+
+                // check left
+                let left = match self.coords.get((x - 1) as usize) {
+                    None => false,
+                    Some(row) => match row.get((y + 1) as usize) {
+                        None => false,
+                        Some(spot) => match spot {
+                            None => false,
+                            Some(other_player) => {
+                                // We might be able to jump in this case
+                                if other_player != player {
+                                    match self.coords.get((x - 2) as usize) {
+                                        None => false,
+                                        Some(row) => match row.get((y + 2) as usize) {
+                                            None => false,
+                                            Some(spot) => match spot {
+                                                None => true,
+                                                // Occupied
+                                                Some(_) => false,
+                                            },
+                                        },
+                                    }
+                                } else {
+                                    false
+                                }
+                            }
+                        },
+                    },
+                };
+
+                left || right
+            }
+        }
     }
 
     pub fn is_incomplete(&self) -> bool {
