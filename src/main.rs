@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use structopt::StructOpt;
 
 use checkers::{
@@ -81,45 +81,44 @@ fn parse_moves(input: &str) -> Result<Vec<Move>> {
             let move_line = input_line
                 .split(",")
                 .map(|n| {
-                    Ok(n.parse::<i32>().with_context(|| {
-                        format!(
-                            "line {}: failed to parse move {} because {} is not a number",
-                            index + 1,
-                            input_line,
-                            n
-                        )
-                    })?)
+                    let result = n.parse::<i32>();
+
+                    if result.is_err() {
+                        println!("line {} illegal move: {}", index + 1, input_line);
+
+                        std::process::exit(0);
+                    }
+
+                    Ok(result?)
                 })
                 .collect::<Result<Vec<i32>>>()?;
 
-            if move_line.len() == 4 {
-                let mut acc = acc?;
+            if move_line.len() != 4 {
+                println!("line {} illegal move: {}", index + 1, input_line);
 
-                let initial = Position {
-                    x: move_line[0],
-                    y: move_line[1],
-                };
-
-                let destination = Position {
-                    x: move_line[2],
-                    y: move_line[3],
-                };
-
-                acc.push(Move {
-                    initial,
-                    destination,
-                    line: index + 1,
-                    src: input_line,
-                });
-
-                Ok(acc)
-            } else {
-                Err(anyhow!(
-                    "line {}: failed to parse move {} because it is invalid",
-                    index + 1,
-                    input_line
-                ))
+                std::process::exit(0);
             }
+
+            let mut acc = acc?;
+
+            let initial = Position {
+                x: move_line[0],
+                y: move_line[1],
+            };
+
+            let destination = Position {
+                x: move_line[2],
+                y: move_line[3],
+            };
+
+            acc.push(Move {
+                initial,
+                destination,
+                line: index + 1,
+                src: input_line,
+            });
+
+            Ok(acc)
         })
 }
 
