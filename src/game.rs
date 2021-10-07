@@ -47,6 +47,10 @@ impl<'a> Game<'a> {
         let mut moves_iter = self.moves.iter().peekable();
 
         while let Some(mov) = moves_iter.next() {
+            if !self.board.has_legal_moves(&self.current_player) {
+                break;
+            }
+
             if self.debug {
                 println!("Player: {}", self.current_player);
                 println!(
@@ -85,7 +89,7 @@ impl<'a> Game<'a> {
             }
         }
 
-        if self.board.is_incomplete() {
+        if self.board.has_legal_moves(&Player::Red) && self.board.has_legal_moves(&Player::White) {
             return Validation::IncompleteGame;
         }
 

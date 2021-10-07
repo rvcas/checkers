@@ -301,150 +301,86 @@ impl Board {
         }
     }
 
-    pub fn is_incomplete(&self) -> bool {
-        if self.red_score() == 0 || self.white_score() == 0 {
-            return false;
-        }
-
+    pub fn has_legal_moves(&self, current_player: &Player) -> bool {
         for y in 0..8 {
             for x in 0..8 {
                 let x: i32 = x;
                 let y: i32 = y;
 
+                let (y_offset_one, y_offset_two) = if current_player.is_red() {
+                    (y - 1, y - 2)
+                } else {
+                    (y + 1, y + 2)
+                };
+
                 match &self.coords[x as usize][y as usize] {
                     None => (),
-                    Some(player) => match player {
-                        Player::Red => {
-                            // check right
-                            match self.coords.get((x + 1) as usize) {
+                    Some(player) if player == current_player => {
+                        // check right
+                        match self.coords.get((x + 1) as usize) {
+                            // Out of bounds but that's ok we just keep going
+                            None => (),
+                            Some(row) => match row.get(y_offset_one as usize) {
                                 // Out of bounds but that's ok we just keep going
                                 None => (),
-                                Some(row) => match row.get((y - 1) as usize) {
-                                    // Out of bounds but that's ok we just keep going
-                                    None => (),
-                                    Some(spot) => match spot {
-                                        // Empty Spot, the original x, y could move here
-                                        None => return true,
-                                        Some(other_player) => {
-                                            // We might be able to jump in this case
-                                            if other_player != player {
-                                                match self.coords.get((x + 2) as usize) {
+                                Some(spot) => match spot {
+                                    // Empty Spot, the original x, y could move here
+                                    None => return true,
+                                    Some(other_player) => {
+                                        // We might be able to jump in this case
+                                        if other_player != player {
+                                            match self.coords.get((x + 2) as usize) {
+                                                // Out of bounds but that's ok we just keep going
+                                                None => (),
+                                                Some(row) => match row.get(y_offset_two as usize) {
                                                     // Out of bounds but that's ok we just keep going
                                                     None => (),
-                                                    Some(row) => match row.get((y - 2) as usize) {
-                                                        // Out of bounds but that's ok we just keep going
-                                                        None => (),
-                                                        Some(spot) => match spot {
-                                                            None => return true,
-                                                            // Occupied
-                                                            Some(_) => (),
-                                                        },
+                                                    Some(spot) => match spot {
+                                                        None => return true,
+                                                        // Occupied
+                                                        Some(_) => (),
                                                     },
-                                                }
+                                                },
                                             }
                                         }
-                                    },
+                                    }
                                 },
-                            };
+                            },
+                        };
 
-                            // check left
-                            match self.coords.get((x - 1) as usize) {
+                        // check left
+                        match self.coords.get((x - 1) as usize) {
+                            // Out of bounds but that's ok we just keep going
+                            None => (),
+                            Some(row) => match row.get(y_offset_one as usize) {
                                 // Out of bounds but that's ok we just keep going
                                 None => (),
-                                Some(row) => match row.get((y - 1) as usize) {
-                                    // Out of bounds but that's ok we just keep going
-                                    None => (),
-                                    Some(spot) => match spot {
-                                        // Empty Spot, the original x, y could move here
-                                        None => return true,
-                                        Some(other_player) => {
-                                            // We might be able to jump in this case
-                                            if other_player != player {
-                                                match self.coords.get((x - 2) as usize) {
+                                Some(spot) => match spot {
+                                    // Empty Spot, the original x, y could move here
+                                    None => return true,
+                                    Some(other_player) => {
+                                        // We might be able to jump in this case
+                                        if other_player != player {
+                                            match self.coords.get((x - 2) as usize) {
+                                                // Out of bounds but that's ok we just keep going
+                                                None => (),
+                                                Some(row) => match row.get(y_offset_two as usize) {
                                                     // Out of bounds but that's ok we just keep going
                                                     None => (),
-                                                    Some(row) => match row.get((y - 2) as usize) {
-                                                        // Out of bounds but that's ok we just keep going
-                                                        None => (),
-                                                        Some(spot) => match spot {
-                                                            None => return true,
-                                                            // Occupied
-                                                            Some(_) => (),
-                                                        },
+                                                    Some(spot) => match spot {
+                                                        None => return true,
+                                                        // Occupied
+                                                        Some(_) => (),
                                                     },
-                                                }
+                                                },
                                             }
                                         }
-                                    },
+                                    }
                                 },
-                            };
-                        }
-                        Player::White => {
-                            // check right
-                            match self.coords.get((x + 1) as usize) {
-                                // Out of bounds but that's ok we just keep going
-                                None => (),
-                                Some(row) => match row.get((y + 1) as usize) {
-                                    // Out of bounds but that's ok we just keep going
-                                    None => (),
-                                    Some(spot) => match spot {
-                                        // Empty Spot, the original x, y could move here
-                                        None => return true,
-                                        Some(other_player) => {
-                                            // We might be able to jump in this case
-                                            if other_player != player {
-                                                match self.coords.get((x + 2) as usize) {
-                                                    // Out of bounds but that's ok we just keep going
-                                                    None => (),
-                                                    Some(row) => match row.get((y + 2) as usize) {
-                                                        // Out of bounds but that's ok we just keep going
-                                                        None => (),
-                                                        Some(spot) => match spot {
-                                                            None => return true,
-                                                            // Occupied
-                                                            Some(_) => (),
-                                                        },
-                                                    },
-                                                }
-                                            }
-                                        }
-                                    },
-                                },
-                            };
-
-                            // check left
-                            match self.coords.get((x - 1) as usize) {
-                                // Out of bounds but that's ok we just keep going
-                                None => (),
-                                Some(row) => match row.get((y + 1) as usize) {
-                                    // Out of bounds but that's ok we just keep going
-                                    None => (),
-                                    Some(spot) => match spot {
-                                        // Empty Spot, the original x, y could move here
-                                        None => return true,
-                                        Some(other_player) => {
-                                            // We might be able to jump in this case
-                                            if other_player != player {
-                                                match self.coords.get((x - 2) as usize) {
-                                                    // Out of bounds but that's ok we just keep going
-                                                    None => (),
-                                                    Some(row) => match row.get((y + 2) as usize) {
-                                                        // Out of bounds but that's ok we just keep going
-                                                        None => (),
-                                                        Some(spot) => match spot {
-                                                            None => return true,
-                                                            // Occupied
-                                                            Some(_) => (),
-                                                        },
-                                                    },
-                                                }
-                                            }
-                                        }
-                                    },
-                                },
-                            };
-                        }
-                    },
+                            },
+                        };
+                    }
+                    _ => (),
                 }
             }
         }
