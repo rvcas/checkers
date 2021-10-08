@@ -1,6 +1,10 @@
 use std::fmt;
 
-use crate::{board::Board, player::Player, r#move::Move};
+use crate::{
+    board::Board,
+    player::Player,
+    r#move::{Move, Position},
+};
 
 #[derive(Debug)]
 pub struct Game<'a> {
@@ -47,10 +51,6 @@ impl<'a> Game<'a> {
         let mut moves_iter = self.moves.iter().peekable();
 
         while let Some(mov) = moves_iter.next() {
-            if !self.board.has_legal_moves(&self.current_player) {
-                break;
-            }
-
             if self.debug {
                 println!("Player: {}", self.current_player);
                 println!(
@@ -81,7 +81,28 @@ impl<'a> Game<'a> {
                             return Validation::Illegal(next_mov);
                         }
                     }
-                    _ => self.next_player(),
+                    _ => {
+                        if mov.is_jump(&self.current_player)
+                            && self.board.is_jumping_possible(
+                                &self.current_player,
+                                // Here we pretend that the next move would start where
+                                // the current one ended
+                                &Move {
+                                    initial: Position {
+                                        x: mov.destination.x,
+                                        y: mov.destination.y,
+                                    },
+                                    destination: Position { x: 0, y: 0 },
+                                    line: 0,
+                                    src: "".to_string(),
+                                },
+                            )
+                        {
+                            return Validation::Illegal(next_mov);
+                        }
+
+                        self.next_player()
+                    }
                 }
             }
         }

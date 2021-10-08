@@ -94,7 +94,7 @@ impl Board {
             return false;
         }
 
-        if !mov.is_jump(current_player) && self.is_jumping_possible(current_player, mov) {
+        if !mov.is_jump(current_player) && self.has_legal_jumps(current_player) {
             return false;
         }
 
@@ -162,7 +162,7 @@ impl Board {
             })
     }
 
-    fn is_jumping_possible(&self, player: &Player, mov: &Move) -> bool {
+    pub fn is_jumping_possible(&self, player: &Player, mov: &Move) -> bool {
         let Position { x, y } = mov.initial;
 
         match player {
@@ -299,6 +299,92 @@ impl Board {
                 left || right
             }
         }
+    }
+
+    pub fn has_legal_jumps(&self, current_player: &Player) -> bool {
+        for y in 0..8 {
+            for x in 0..8 {
+                let x: i32 = x;
+                let y: i32 = y;
+
+                let (y_offset_one, y_offset_two) = if current_player.is_red() {
+                    (y - 1, y - 2)
+                } else {
+                    (y + 1, y + 2)
+                };
+
+                match &self.coords[x as usize][y as usize] {
+                    None => (),
+                    Some(player) if player == current_player => {
+                        // check right
+                        match self.coords.get((x + 1) as usize) {
+                            // Out of bounds but that's ok we just keep going
+                            None => (),
+                            Some(row) => match row.get(y_offset_one as usize) {
+                                // Out of bounds but that's ok we just keep going
+                                None => (),
+                                Some(spot) => match spot {
+                                    None => (),
+                                    Some(other_player) => {
+                                        // We might be able to jump in this case
+                                        if other_player != player {
+                                            match self.coords.get((x + 2) as usize) {
+                                                // Out of bounds but that's ok we just keep going
+                                                None => (),
+                                                Some(row) => match row.get(y_offset_two as usize) {
+                                                    // Out of bounds but that's ok we just keep going
+                                                    None => (),
+                                                    Some(spot) => match spot {
+                                                        None => return true,
+                                                        // Occupied
+                                                        Some(_) => (),
+                                                    },
+                                                },
+                                            }
+                                        }
+                                    }
+                                },
+                            },
+                        };
+
+                        // check left
+                        match self.coords.get((x - 1) as usize) {
+                            // Out of bounds but that's ok we just keep going
+                            None => (),
+                            Some(row) => match row.get(y_offset_one as usize) {
+                                // Out of bounds but that's ok we just keep going
+                                None => (),
+                                Some(spot) => match spot {
+                                    // Empty Spot, the original x, y could move here
+                                    None => (),
+                                    Some(other_player) => {
+                                        // We might be able to jump in this case
+                                        if other_player != player {
+                                            match self.coords.get((x - 2) as usize) {
+                                                // Out of bounds but that's ok we just keep going
+                                                None => (),
+                                                Some(row) => match row.get(y_offset_two as usize) {
+                                                    // Out of bounds but that's ok we just keep going
+                                                    None => (),
+                                                    Some(spot) => match spot {
+                                                        None => return true,
+                                                        // Occupied
+                                                        Some(_) => (),
+                                                    },
+                                                },
+                                            }
+                                        }
+                                    }
+                                },
+                            },
+                        };
+                    }
+                    _ => (),
+                }
+            }
+        }
+
+        false
     }
 
     pub fn has_legal_moves(&self, current_player: &Player) -> bool {
