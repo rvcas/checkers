@@ -51,9 +51,9 @@ impl<'a> Game<'a> {
         let mut moves_iter = self.moves.iter().peekable();
 
         while let Some(mov) = moves_iter.next() {
-            if !self.board.has_legal_moves(&self.current_player) {
-                break;
-            }
+            // if !self.board.has_legal_moves(&self.current_player) {
+            //     break;
+            // }
 
             if self.debug {
                 println!("Player: {}", self.current_player);
@@ -81,6 +81,12 @@ impl<'a> Game<'a> {
                         return Validation::Illegal(next_mov);
                     }
                     Some(player) if *player == self.current_player => {
+                        if mov.destination.x != next_mov.initial.x
+                            || mov.destination.y != next_mov.initial.y
+                        {
+                            return Validation::Illegal(next_mov);
+                        }
+
                         if !mov.is_jump(player) || !next_mov.is_jump(player) {
                             return Validation::Illegal(next_mov);
                         }
