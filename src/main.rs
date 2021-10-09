@@ -60,11 +60,11 @@ fn validate_input(input: &mut String, debug: bool) -> Result<String> {
 }
 
 fn clean_input(input: &mut String) {
-    if let Some('\n') = input.chars().next_back() {
+    while let Some('\n') = input.chars().next_back() {
         input.pop();
     }
 
-    if let Some('\r') = input.chars().next_back() {
+    while let Some('\r') = input.chars().next_back() {
         input.pop();
     }
 }
@@ -72,6 +72,7 @@ fn clean_input(input: &mut String) {
 fn parse_moves(input: &str) -> Result<Vec<Move>> {
     input
         .split("\n")
+        .filter(|line| !line.is_empty())
         .enumerate()
         .fold(Ok(vec![]), |acc, (index, input_line)| {
             let mut input_line = input_line.to_string();

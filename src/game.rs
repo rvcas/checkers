@@ -51,6 +51,10 @@ impl<'a> Game<'a> {
         let mut moves_iter = self.moves.iter().peekable();
 
         while let Some(mov) = moves_iter.next() {
+            if !self.board.has_legal_moves(&self.current_player) {
+                break;
+            }
+
             if self.debug {
                 println!("Player: {}", self.current_player);
                 println!(
